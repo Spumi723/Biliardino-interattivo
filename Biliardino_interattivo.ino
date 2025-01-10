@@ -1,3 +1,5 @@
+#include <IRremote.hpp>
+
 /*
   Codice arduino per il biliardino interattivo
 
@@ -22,8 +24,8 @@ CRGB leds[NUM_LEDS];
 
 
 const int ledPin = 13;      // LED collegato al pin 13 per indicazioni di stato
-const int redSensor = A1;   // Sensori piezo collegati ai pin A1 (rossi) A2 (blu)
-const int blueSensor = A2; 
+const int redSensor = A2;   // Sensori piezo collegati ai pin A1 (rossi) A2 (blu)
+const int blueSensor = A1; 
 
 /*
  * Valori chiave per la rilevazione dei goal
@@ -31,10 +33,11 @@ const int blueSensor = A2;
  * ma non è questo il giorno
  */
 
-const int sensTh = 200;  // Threshold per inizio rilevazione
-const int redTh = 2500; // Threshold per inizio rilevazione blu
-const int blueTh = 2500; // Threshold per inizio rilevazione blu
-const int redDiff = 1000;
+const int sensTh = 100;   // Threshold per inizio rilevazione
+const int redTh = 3500;   // Threshold segnale totale porta rossa
+const int blueTh = 4500;  // Threshold segnale totale porta blu
+
+const int redDiff = 800;    // Differenza minima di segnale durante un goal
 const int blueDiff = 1000;
 
 
@@ -46,14 +49,14 @@ int bTemp = 0;
 
 int mode = 0;  // Modalità di animazione   
 
-int counter = 0;
-
+long int counter = 0; // Contatore per le animazioni
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // declare the ledPin as as OUTPUT
   Serial.begin(9600);       // use the serial port
   FastLED.addLeds<WS2811, LED_PIN, RGB>(leds, NUM_LEDS);
   irrecv.enableIRIn(); // Start the receiver
+  counter=0;
 }
 
 void loop() {
@@ -61,9 +64,7 @@ void loop() {
   redReading = 0;
   blueReading = 0;
 
-  counter = 0;
-
-  while(abs(analogRead(redSensor))<redTh && abs(analogRead(blueSensor))<blueTh){
+  while(abs(analogRead(redSensor))<sensTh && abs(analogRead(blueSensor))<sensTh){
     
     if (irrecv.decode(&results)){ // Rilevazione della modalità tramite sensore IR
       switch(results.value){
@@ -103,9 +104,12 @@ void loop() {
     }
 
     if(counter%100 == 0){
-      defaultAnimation(mode,counter/100);
+      defaultAnimation(mode,int(counter/100));
     }
     counter += 1;
+    if(counter<0){
+      counter = 0;
+    }
   }
 
   for(int i=0;i<200;i++){ // Integrazione del segnale
@@ -123,15 +127,14 @@ void loop() {
       goalAnimation(mode, 0);
     }
   }
-
   
-  Serial.print("Rosso: ");
+  
+  Serial.print(blueReading);
+  Serial.print(",");
   Serial.println(redReading);
-  delay(5);
-  Serial.print("Blue: ");
-  Serial.println(blueReading);
   
-  delay(1000);  // delay to avoid overloading the serial port buffer
+  
+  delay(1);  // delay to avoid overloading the serial port buffer
 }
 
 void goalAnimation(int m, int t){ // t=0 goal dei blu, t=1 goal dei rossi
@@ -139,42 +142,43 @@ void goalAnimation(int m, int t){ // t=0 goal dei blu, t=1 goal dei rossi
     case 0:
       if(t == 0){
       CRGB flameColor = CRGB(255,0,0);
-      for(int j=0;j<3;j++){
+      for(int j=0;j<4;j++){
         for (int i = 0; i < NUM_LEDS; i++) {
           leds[i] = flameColor;
         }
         FastLED.show();
-        delay(200);
+        delay(150);
         for (int i = 0; i < NUM_LEDS; i++) {
           leds[i] = CRGB::Black;
         }
         FastLED.show();
-        delay(200);
+        delay(50);
       }
       
     }
     else if(t == 1){
       CRGB flameColor = CRGB(0,255,0);
-      for(int j=0;j<3;j++){
+      for(int j=0;j<4;j++){
         for (int i = 0; i < NUM_LEDS; i++) {
           leds[i] = flameColor;
         }
         FastLED.show();
-        delay(200);
+        delay(150);
         for (int i = 0; i < NUM_LEDS; i++) {
           leds[i] = CRGB::Black;
         }
         FastLED.show();
-        delay(200);
+        delay(50);
       }
     }
   }
 }
 
-void defaultAnimation(int m, int i){
-  i = i%510;
-  i = abs(i-255);
-  CRGB flameColor = CRGB(i,i,0);
+void defaultAnimation(int m, long int j){
+  j = j%410;
+  j = j - 205;
+  j = abs(j);
+  CRGB flameColor = CRGB(0,0,j+50);
   for (int i = 0; i < NUM_LEDS; i++) {
     leds[i] = flameColor;
   }
