@@ -26,7 +26,7 @@ const int redSensor = A1;   // Sensori piezo collegati ai pin A1 (rossi) A2 (blu
 const int blueSensor = A2; 
 
 /*
- * Valori chiave per la rilevazione dei goa
+ * Valori chiave per la rilevazione dei goal
  * forse un giorno faremo machine learning
  * ma non è questo il giorno
  */
@@ -44,7 +44,9 @@ int blueReading = 0;    // Segale porta blu
 int rTemp = 0;    // Variabili di appoggio
 int bTemp = 0;
 
-int mode = 0;  // Modalità di animazione         
+int mode = 0;  // Modalità di animazione   
+
+int counter = 0;
 
 
 void setup() {
@@ -58,6 +60,8 @@ void loop() {
   // read the sensor and store it in the variable sensorReading:
   redReading = 0;
   blueReading = 0;
+
+  counter = 0;
 
   while(abs(analogRead(redSensor))<redTh && abs(analogRead(blueSensor))<blueTh){
     
@@ -97,6 +101,11 @@ void loop() {
       Serial.println(mode);
       irrecv.resume();        // prepare to receive the next value
     }
+
+    if(counter%100 == 0){
+      defaultAnimation(mode,counter/100);
+    }
+    counter += 1;
   }
 
   for(int i=0;i<200;i++){ // Integrazione del segnale
@@ -163,5 +172,11 @@ void goalAnimation(int m, int t){ // t=0 goal dei blu, t=1 goal dei rossi
 }
 
 void defaultAnimation(int m, int i){
-  
+  i = i%510;
+  i = abs(i-255);
+  CRGB flameColor = CRGB(i,i,0);
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = flameColor;
+  }
+  FastLED.show();
 }
