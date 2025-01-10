@@ -115,24 +115,7 @@ void loop() {
     }
   }
 
-  if(blueReading > 2000){
-    CRGB flameColor = CRGB(102,0,102);
-    // Create a flickering effect
-    for (int i = 0; i < NUM_LEDS; i++) {
-      // Randomly flicker the LEDs
-      leds[i] = flameColor;
-    }
-    FastLED.show();
-  }
-  else if(redReading > 2000){
-    CRGB flameColor = CRGB(0,255,102);
-    // Create a flickering effect
-    for (int i = 0; i < NUM_LEDS; i++) {
-      // Randomly flicker the LEDs
-      leds[i] = flameColor;
-    }
-    FastLED.show();
-  }
+  
   Serial.print("Rosso: ");
   Serial.println(redReading);
   delay(5);
@@ -145,6 +128,37 @@ void loop() {
 void goalAnimation(int m, int t){ // t=0 goal dei blu, t=1 goal dei rossi
   switch(m){
     case 0:
+      if(t == 0){
+      CRGB flameColor = CRGB(255,0,0);
+      for(int j=0;j<3;j++){
+        for (int i = 0; i < NUM_LEDS; i++) {
+          leds[i] = flameColor;
+        }
+        FastLED.show();
+        delay(200);
+        for (int i = 0; i < NUM_LEDS; i++) {
+          leds[i] = CRGB::Black;
+        }
+        FastLED.show();
+        delay(200);
+      }
+      
+    }
+    else if(t == 1){
+      CRGB flameColor = CRGB(0,255,0);
+      for(int j=0;j<3;j++){
+        for (int i = 0; i < NUM_LEDS; i++) {
+          leds[i] = flameColor;
+        }
+        FastLED.show();
+        delay(200);
+        for (int i = 0; i < NUM_LEDS; i++) {
+          leds[i] = CRGB::Black;
+        }
+        FastLED.show();
+        delay(200);
+      }
+    }
   }
 }
 
